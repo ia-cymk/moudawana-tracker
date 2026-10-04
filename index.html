@@ -6,7 +6,6 @@
     <title>راصد مدونة الأسرة | المنصة الرسمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- إعدادات الوضع الليلي -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -77,11 +76,12 @@
             <span id="last-update" class="text-sm text-gray-500 dark:text-gray-400">جاري التحديث...</span>
         </div>
         
-        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- حاوية الأخبار -->
+        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 align-stretch">
             <!-- الأخبار تظهر هنا -->
         </div>
 
-        <!-- زر عرض المزيد (تمت إضافته هنا) -->
+        <!-- زر عرض المزيد -->
         <div class="text-center mt-10 mb-6">
             <button id="load-more-btn" class="hidden bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-sm border border-gray-300 dark:border-gray-600 transition-colors duration-300">
                 عرض المزيد من المستجدات ⬇️
@@ -116,11 +116,13 @@
             });
         });
 
-        // --- المتغيرات الجديدة الخاصة بنظام (عرض المزيد) ---
         let allNewsData = [];
-        let currentFilteredNews = []; // مصفوفة تحفظ نتائج البحث الحالية
-        let visibleCount = 9;         // عدد الأخبار التي تظهر في الشاشة
-        const ITEMS_PER_PAGE = 9;     // عدد الأخبار التي ستضاف عند كل نقرة
+        let currentFilteredNews = [];
+        let visibleCount = 9;
+        const ITEMS_PER_PAGE = 9;
+
+        // رابط موقعك الرسمي (يتم إرفاقه في الرسالة التلقائية عند المشاركة)
+        const SITE_URL = "https://ia-cymk.github.io/moudawana-tracker/";
 
         function getSourceColorClasses(source) {
             if (!source) return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200', border: 'border-gray-200 dark:border-gray-600' };
@@ -207,8 +209,8 @@
                     });
                 }
 
-                currentFilteredNews = allNewsData; // تعيين المصفوفة الحالية
-                renderNews(currentFilteredNews, false); // عرض الدفعة الأولى
+                currentFilteredNews = allNewsData; 
+                renderNews(currentFilteredNews, false); 
                 
                 lastUpdate.innerText = `آخر تحديث: ${new Date().toLocaleString('ar-MA')}`;
             } catch (error) {
@@ -217,12 +219,10 @@
             }
         }
 
-        // --- تعديل دالة الرسم لتدعم (عرض المزيد) ---
         function renderNews(newsArray, isAppending = false) {
             const container = document.getElementById('news-container');
             const loadMoreBtn = document.getElementById('load-more-btn');
             
-            // إذا كان هذا بحثاً جديداً أو تحميلاً أولياً، نقوم بتفريغ الشاشة وإعادة العداد
             if (!isAppending) {
                 container.innerHTML = '';
                 visibleCount = ITEMS_PER_PAGE;
@@ -234,7 +234,6 @@
                  return;
             }
 
-            // تحديد الأخبار التي سيتم رسمها في هذه الدفعة
             const startIndex = isAppending ? visibleCount - ITEMS_PER_PAGE : 0;
             const itemsToRender = newsArray.slice(startIndex, visibleCount);
 
@@ -247,12 +246,20 @@
                 let tagsHTML = '';
                 if (Array.isArray(tags)) {
                     tags.forEach(tag => {
-                        tagsHTML += `<span onclick="filterByTag('${tag}')" class="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] ml-1 cursor-pointer hover:bg-red-100 hover:text-red-800 dark:hover:bg-red-900 dark:hover:text-red-200 transition-colors">#${tag}</span>`;
+                        tagsHTML += `<span onclick="filterByTag('${tag}')" class="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] ml-1 mb-1 inline-block cursor-pointer hover:bg-red-100 hover:text-red-800 dark:hover:bg-red-900 dark:hover:text-red-200 transition-colors">#${tag}</span>`;
                     });
                 }
 
+                // تجهيز رسالة المشاركة الاجتماعية (نص + رابط)
+                const shareText = encodeURIComponent(`عاجل: ${item.title}\nالمصدر: ${item.source}\nالتفاصيل: ${item.link}\n\nعبر منصة راصد مدونة الأسرة: ${SITE_URL}`);
+                
+                // روابط الأزرار
+                const waLink = `https://api.whatsapp.com/send?text=${shareText}`;
+                const xLink = `https://twitter.com/intent/tweet?text=${shareText}`;
+                const fbLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}&quote=${encodeURIComponent(item.title)}`;
+
                 const card = `
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden flex flex-col h-full">
                         <div class="absolute top-4 left-[-35px] -rotate-45 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-32 text-center text-[10px] font-bold py-1 shadow-sm border-b border-red-200 dark:border-red-700">
                             ${status}
                         </div>
@@ -263,18 +270,37 @@
                         <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight">${item.title}</h4>
                         <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 border-red-500 pr-2">${summary}</p>
                         <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer" title="انقر لقراءة التفاصيل كاملة">${item.description}</p>
-                        <div class="flex flex-wrap items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
-                            <div class="flex flex-wrap gap-1">
-                                ${tagsHTML}
+                        
+                        <!-- مساحة فارغة تدفع الأزرار والهاشتاجات نحو الأسفل دائماً -->
+                        <div class="flex-grow"></div>
+                        
+                        <div class="mt-4 mb-3">
+                            ${tagsHTML}
+                        </div>
+
+                        <!-- شريط الأزرار (أزرار المشاركة + رابط المصدر) -->
+                        <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4 mt-auto">
+                            <div class="flex gap-4">
+                                <!-- واتساب -->
+                                <a href="${waLink}" target="_blank" title="مشاركة عبر واتساب" class="text-gray-400 hover:text-green-500 transition-colors">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                </a>
+                                <!-- X -->
+                                <a href="${xLink}" target="_blank" title="مشاركة عبر X" class="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                </a>
+                                <!-- فيسبوك -->
+                                <a href="${fbLink}" target="_blank" title="مشاركة عبر فيسبوك" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.801.006 1.602.046 2.398.12v3.136h-1.652c-1.365 0-1.637.76-1.637 1.828v2.474h3.336l-.41 3.667h-2.926v7.98H9.101z"/></svg>
+                                </a>
                             </div>
-                            <a href="${item.link}" target="_blank" class="text-red-700 dark:text-red-400 font-bold text-xs hover:underline mt-2 sm:mt-0">المصدر 🔗</a>
+                            <a href="${item.link}" target="_blank" class="text-red-800 dark:text-red-300 font-bold text-xs hover:underline bg-red-50 dark:bg-red-900/30 px-3 py-1.5 rounded-md transition-colors">المصدر 🔗</a>
                         </div>
                     </div>
                 `;
                 container.innerHTML += card;
             });
 
-            // إخفاء أو إظهار زر عرض المزيد حسب عدد الأخبار المتبقية
             if (visibleCount < newsArray.length) {
                 loadMoreBtn.classList.remove('hidden');
             } else {
@@ -282,10 +308,9 @@
             }
         }
 
-        // --- حدث النقر على زر عرض المزيد ---
         document.getElementById('load-more-btn').addEventListener('click', () => {
             visibleCount += ITEMS_PER_PAGE;
-            renderNews(currentFilteredNews, true); // true تعني إضافة الأخبار للقديمة بدلاً من مسحها
+            renderNews(currentFilteredNews, true); 
         });
 
         function filterByTag(tag) {
@@ -311,7 +336,6 @@
                 return matchesSearch && matchesSource;
             });
             
-            // عند البحث، نقوم بعرض الدفعة الأولى من النتائج الجديدة
             renderNews(currentFilteredNews, false);
         }
 
