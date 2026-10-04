@@ -6,6 +6,7 @@
     <title>راصد مدونة الأسرة | المنصة الرسمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- إعدادات الوضع الليلي لـ Tailwind -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -19,17 +20,20 @@
 </head>
 <body class="bg-slate-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
 
+    <!-- شريط التنقل -->
     <header class="bg-red-800 dark:bg-gray-950 text-white shadow-md border-b-4 border-red-900 dark:border-red-900 transition-colors duration-300">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 <span class="text-3xl">⚖️</span> راصد مدونة الأسرة
             </h1>
+            <!-- زر تبديل الوضع الليلي -->
             <button id="theme-toggle" class="p-2 rounded-lg bg-red-900 dark:bg-gray-800 hover:bg-red-700 dark:hover:bg-gray-700 transition">
                 <span id="theme-toggle-icon" class="text-xl">🌙</span>
             </button>
         </div>
     </header>
 
+    <!-- الواجهة الترحيبية -->
     <section class="bg-white dark:bg-gray-800 py-12 border-b dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto px-4 text-center max-w-3xl">
             <h2 class="text-3xl font-bold text-red-900 dark:text-red-500 mb-4">تتبع مسار تعديل مدونة الأسرة بالمغرب</h2>
@@ -37,9 +41,9 @@
         </div>
     </section>
 
+    <!-- المحتوى الرئيسي -->
     <main class="container mx-auto px-4 py-8">
         
-        <!-- قسم الإحصائيات السريعة (الجديد) -->
         <!-- قسم الإحصائيات السريعة -->
         <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 hidden">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center">
@@ -54,7 +58,6 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">الجهة الأكثر نشاطاً</p>
                 <p id="stat-top-source" class="text-xl font-bold text-gray-800 dark:text-white">-</p>
             </div>
-            <!-- المربع الجديد لزمن الانتظار -->
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center flex flex-col justify-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold" title="عدد الأيام منذ صدور آخر مستجد رسمي">فترة الهدوء الحالية</p>
                 <p id="stat-waiting-time" class="text-xl font-bold text-orange-600 dark:text-orange-400">-</p>
@@ -64,7 +67,7 @@
         <!-- قسم البحث والتصفية -->
         <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
             <div class="w-full md:w-2/3 relative">
-                <input type="text" id="searchInput" placeholder="ابحث في المستجدات..." 
+                <input type="text" id="searchInput" placeholder="ابحث في المستجدات (مثال: زواج القاصر، التعدد...)" 
                        class="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-800 dark:focus:border-red-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
                 <span class="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500">🔍</span>
             </div>
@@ -75,23 +78,25 @@
             </div>
         </div>
 
+        <!-- عنوان قسم الأخبار -->
         <div class="flex justify-between items-end mb-8 border-r-4 border-red-800 dark:border-red-500 pr-3">
             <h3 class="text-2xl font-bold text-gray-800 dark:text-white">المستجدات الموثقة</h3>
             <span id="last-update" class="text-sm text-gray-500 dark:text-gray-400">جاري التحديث...</span>
         </div>
         
+        <!-- حاوية الأخبار -->
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- الأخبار تظهر هنا -->
         </div>
     </main>
 
-    // --- سكربت الوضع الليلي (المُعدّل والمضمون) ---
+    <script>
+        // --- 1. سكربت الوضع الليلي ---
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggleBtn = document.getElementById('theme-toggle');
             const themeToggleIcon = document.getElementById('theme-toggle-icon');
             const htmlElement = document.documentElement;
             
-            // التحقق من حالة الوضع المحفوظة مسبقاً
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 htmlElement.classList.add('dark');
                 themeToggleIcon.textContent = '☀️';
@@ -100,7 +105,6 @@
                 themeToggleIcon.textContent = '🌙';
             }
 
-            // تفعيل الزر
             themeToggleBtn.addEventListener('click', function() {
                 htmlElement.classList.toggle('dark');
                 if (htmlElement.classList.contains('dark')) {
@@ -112,8 +116,8 @@
                 }
             });
         });
-        // -------------------------
 
+        // --- 2. المتغيرات والدوال المساعدة ---
         let allNewsData = [];
 
         function getSourceColorClasses(source) {
@@ -134,7 +138,7 @@
             }
         }
 
-        // دالة جديدة لحساب الإحصائيات
+        // --- 3. حساب الإحصائيات ---
         function calculateStats(data) {
             if(data.length === 0) return;
             
@@ -159,11 +163,9 @@
             });
             document.getElementById('stat-top-source').innerText = topSource;
 
-            // --- تحليل زمن الانتظار (فترة الهدوء) ---
             if (data[0] && data[0].timestamp) {
                 const lastUpdateDate = new Date(data[0].timestamp);
                 const today = new Date();
-                // حساب الفرق بالملي ثانية ثم تحويله إلى أيام
                 const diffTime = Math.abs(today - lastUpdateDate);
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                 
@@ -176,14 +178,11 @@
 
                 document.getElementById('stat-waiting-time').innerText = waitingText;
             } else {
-                // إذا كان الخبر قديماً ولم يحصل على الطابع الزمني بعد
-                document.getElementById('stat-waiting-time').innerText = "غير متوفر";
+                document.getElementById('stat-waiting-time').innerText = "قيد الانتظار";
             }
         }
-            
-            document.getElementById('stat-top-source').innerText = topSource;
-        }
 
+        // --- 4. جلب البيانات ---
         async function loadNews() {
             const container = document.getElementById('news-container');
             const lastUpdate = document.getElementById('last-update');
@@ -191,34 +190,45 @@
             
             try {
                 const response = await fetch(`data.json?t=${new Date().getTime()}`);
-                allNewsData = await response.json();
                 
-                if (allNewsData.length > 0) {
-                    calculateStats(allNewsData); // استدعاء الإحصائيات
+                // التعامل مع الخطأ إذا كان ملف JSON فارغاً أو غير صحيح
+                if (!response.ok) throw new Error('فشل في جلب البيانات');
+                
+                const textData = await response.text();
+                if (!textData.trim()) {
+                    allNewsData = []; // إذا كان الملف فارغاً تماماً
+                } else {
+                    allNewsData = JSON.parse(textData);
                 }
                 
-                const uniqueSources = [...new Set(allNewsData.map(item => item.source))];
-                uniqueSources.forEach(source => {
-                    const option = document.createElement('option');
-                    option.value = source;
-                    option.textContent = source;
-                    sourceFilter.appendChild(option);
-                });
+                if (allNewsData.length > 0) {
+                    calculateStats(allNewsData);
+                    
+                    const uniqueSources = [...new Set(allNewsData.map(item => item.source))];
+                    uniqueSources.forEach(source => {
+                        const option = document.createElement('option');
+                        option.value = source;
+                        option.textContent = source;
+                        sourceFilter.appendChild(option);
+                    });
+                }
 
                 renderNews(allNewsData);
                 lastUpdate.innerText = `آخر تحديث: ${new Date().toLocaleString('ar-MA')}`;
                 
             } catch (error) {
-                container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium">جاري تحديث البيانات... أو لا توجد أخبار جديدة.</p>`;
+                console.error("خطأ في قراءة JSON:", error);
+                container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">لم يتم العثور على مستجدات رسمية حتى الآن. راجعنا لاحقاً.</p>`;
             }
         }
 
+        // --- 5. رسم الأخبار (الكروت) ---
         function renderNews(newsArray) {
             const container = document.getElementById('news-container');
             container.innerHTML = '';
             
             if (newsArray.length === 0) {
-                 container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">لم يتم العثور على نتائج.</p>`;
+                 container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">لا توجد أخبار حالياً أو لا توجد نتائج مطابقة لبحثك.</p>`;
             } else {
                 newsArray.forEach(item => {
                     const colors = getSourceColorClasses(item.source);
@@ -264,6 +274,7 @@
             }
         }
 
+        // --- 6. البحث والتصفية ---
         document.getElementById('searchInput').addEventListener('input', filterData);
         document.getElementById('sourceFilter').addEventListener('change', filterData);
 
@@ -280,6 +291,7 @@
             renderNews(filteredNews);
         }
 
+        // تشغيل دوال جلب الأخبار عند اكتمال تحميل الصفحة
         document.addEventListener('DOMContentLoaded', loadNews);
     </script>
 </body>
