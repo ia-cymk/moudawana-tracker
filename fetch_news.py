@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 from google import genai
 from google.genai import types
 
@@ -21,13 +22,12 @@ def update_news():
 
     print("جاري جلب وتحليل أحدث مستجدات مدونة الأسرة...")
     
-    # --- هنا التعديل الجوهري في Prompt ---
     prompt = """
     أنت راصد إخباري ومحلل قانوني متخصص في تتبع مستجدات تعديل مدونة الأسرة في المغرب.
     ابحث في الويب عن أحدث المستجدات الرسمية. اعتمد فقط على المصادر الموثوقة (البلاغات الملكية، وكالة الأنباء MAP، الحكومة، وزارة العدل) واستبعد الشائعات تماماً.
     
     قم بتحليل الخبر واستخرج منه البيانات التالية. أرجع النتيجة على شكل مصفوفة JSON صالحة (Array of objects) فقط، بدون نصوص إضافية، بحيث يحتوي كل كائن على:
-       - date: (تاريخ الصدور، مثال: "أكتوبر 2026")
+       - date: (تاريخ الصدور كنص، مثال: "4 أكتوبر 2026")
        - source: (الجهة المصدرة)
        - title: (عنوان الإجراء)
        - description: (شرح مبسط وموضوعي للإجراء في سطرين)
@@ -54,14 +54,18 @@ def update_news():
             existing_links = [item.get('link', '') for item in existing_data]
             existing_titles = [item.get('title', '') for item in existing_data]
             
+            # جلب التاريخ الحالي للبرنامج
+            current_iso_time = datetime.now().isoformat()
+            
             for item in new_data:
-                # التحقق من أن الكائن الجديد يحتوي على البيانات الأساسية لتجنب الأخطاء
                 if 'title' in item and 'link' in item:
                     if item.get('link') not in existing_links and item.get('title') not in existing_titles:
-                        # التأكد من وجود الحقول الجديدة حتى لا ينهار الموقع إذا نسيها الذكاء الاصطناعي
                         item['summary'] = item.get('summary', item.get('description', 'لا يوجد ملخص متاح.'))
                         item['tags'] = item.get('tags', ['مدونة الأسرة'])
                         item['status'] = item.get('status', 'مستجد')
+                        
+                        # --- إضافة الطابع الزمني الدقيق للتحليل ---
+                        item['timestamp'] = current_iso_time
                         
                         existing_data.insert(0, item)
                         added_count += 1
