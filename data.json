@@ -1,81 +1,15 @@
-import os
-import json
-from google import genai
-from google.genai import types
-
-# جلب المفتاح السري من إعدادات GitHub
-API_KEY = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=API_KEY)
-
-def update_news():
-    print("جاري التحقق من الأخبار القديمة...")
-    
-    # 1. قراءة البيانات القديمة إن وجدت
-    existing_data = []
-    if os.path.exists("data.json"):
-        try:
-            with open("data.json", 'r', encoding='utf-8') as f:
-                content = f.read()
-                if content.strip():
-                    existing_data = json.loads(content)
-        except Exception as e:
-            print(f"لم يتم العثور على أرشيف سابق أو حدث خطأ في قراءته: {e}")
-
-    print("جاري جلب أحدث مستجدات مدونة الأسرة...")
-    
-    # 2. الطلب من الذكاء الاصطناعي
-    prompt = """
-    أنت راصد إخباري وباحث قانوني متخصص في تتبع مستجدات تعديل مدونة الأسرة في المغرب.
-    ابحث في الويب عن أحدث المستجدات الرسمية التي صدرت مؤخراً.
-    شروط صارمة:
-    1. اعتمد فقط على: البلاغات الملكية، وكالة المغرب العربي للأنباء (MAP)، الأمانة العامة للحكومة (SGG)، وزارة العدل، والمصادر الموثوقة جداً.
-    2. استبعد أي شائعات، تكهنات، أو آراء غير رسمية.
-    3. أرجع النتيجة على شكل مصفوفة JSON صالحة (Array of objects) فقط، بدون أي نصوص إضافية، حيث كل كائن يحتوي على:
-       - date: (تاريخ الصدور)
-       - source: (الجهة المصدرة)
-       - title: (عنوان الإجراء)
-       - description: (تفاصيل الإجراء)
-       - link: (رابط المصدر)
-    """
-    
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                tools=[{"google_search": {}}], 
-                response_mime_type="application/json",
-            )
-        )
-        
-        # التأكد من صحة الـ JSON المسترجع
-        try:
-            new_data = json.loads(response.text)
-            
-            # 3. منع التكرار ودمج البيانات
-            added_count = 0
-            # استخراج روابط الأخبار القديمة لتسهيل المقارنة
-            existing_links = [item.get('link', '') for item in existing_data]
-            existing_titles = [item.get('title', '') for item in existing_data]
-            
-            for item in new_data:
-                # إذا كان الخبر غير موجود مسبقاً (سواء بالرابط أو العنوان)
-                if item.get('link') not in existing_links and item.get('title') not in existing_titles:
-                    # إضافة الخبر الجديد إلى بداية القائمة (ليظهر أولاً في الموقع)
-                    existing_data.insert(0, item)
-                    added_count += 1
-            
-            # 4. حفظ الأرشيف المحدث
-            with open("data.json", 'w', encoding='utf-8') as f:
-                json.dump(existing_data, f, ensure_ascii=False, indent=4)
-                
-            print(f"تم تحديث الأرشيف بنجاح. تمت إضافة {added_count} خبر جديد.")
-            
-        except json.JSONDecodeError:
-            print("الرد المستلم ليس بصيغة JSON صالحة.")
-            
-    except Exception as e:
-        print(f"حدث خطأ أثناء التواصل مع API: {e}")
-
-if __name__ == "__main__":
-    update_news()
+[
+    {
+        "date": "أكتوبر 2026",
+        "source": "هيئة تعديل مدونة الأسرة",
+        "title": "خبر تجريبي: مقترح مأسسة الوساطة",
+        "description": "هذا خبر تجريبي يوضح كيف سيعرض الموقع التفاصيل عند جلبها تلقائياً. تم اقتراح إحداث هيئة غير قضائية للوساطة تتدخل قبل اللجوء للمحاكم.",
+        "summary": "اقتراح هيئة للوساطة الأسرية كآلية بديلة.",
+        "tags": [
+            "الوساطة الأسرية",
+            "تجربة"
+        ],
+        "status": "مقترح",
+        "link": "#"
+    }
+]
