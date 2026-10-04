@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>راصد مدونة الأسرة | المنصة الرسمية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-red-800 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <span class="text-3xl">⚖️</span> راصد مدونة الأسرة
+            </h1>
+        </div>
+    </header>
+
+    <section class="bg-white py-12 border-b">
+        <div class="container mx-auto px-4 text-center max-w-3xl">
+            <h2 class="text-3xl font-bold text-red-900 mb-4">تتبع مسار تعديل مدونة الأسرة بالمغرب</h2>
+            <p class="text-gray-600 text-lg">منصة آنية ترصد المستجدات من المصادر الموثوقة فقط.</p>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 py-12">
+        <div class="flex justify-between items-end mb-8 border-r-4 border-red-800 pr-3">
+            <h3 class="text-2xl font-bold text-gray-800">المستجدات الرسمية الموثقة</h3>
+            <span id="last-update" class="text-sm text-gray-500">جاري التحديث...</span>
+        </div>
+        
+        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- سيتم حقن الأخبار هنا بواسطة JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        async function loadNews() {
+            const container = document.getElementById('news-container');
+            const lastUpdate = document.getElementById('last-update');
+            
+            try {
+                // قراءة ملف JSON
+                const response = await fetch(`data.json?t=${new Date().getTime()}`);
+                const data = await response.json();
+                
+                container.innerHTML = '';
+                
+                if (data.length === 0) {
+                     container.innerHTML = `<p class="text-gray-500 col-span-3 font-medium">لم يتم العثور على مستجدات رسمية حتى الآن. راجعنا لاحقاً.</p>`;
+                } else {
+                    data.forEach(item => {
+                        const card = `
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">${item.date}</span>
+                                    <span class="text-xs text-gray-500 font-bold">${item.source}</span>
+                                </div>
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">${item.title}</h4>
+                                <p class="text-gray-600 mb-4 text-sm leading-relaxed">${item.description}</p>
+                                <a href="${item.link}" target="_blank" class="text-red-700 font-bold text-sm hover:underline">المصدر 🔗</a>
+                            </div>
+                        `;
+                        container.innerHTML += card;
+                    });
+                }
+                
+                lastUpdate.innerText = `آخر تحديث: ${new Date().toLocaleString('ar-MA')}`;
+                
+            } catch (error) {
+                container.innerHTML = `<p class="text-gray-500 col-span-3 font-medium">جاري تحديث البيانات... أو لا توجد أخبار جديدة.</p>`;
+                console.error("Error loading news:", error);
+            }
+        }
+
+        // تشغيل الدالة عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', loadNews);
+    </script>
+</body>
+</html>
