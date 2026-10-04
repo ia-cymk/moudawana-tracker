@@ -139,7 +139,8 @@
             }
         }
 
-        function renderNews(newsArray) {
+        
+                    function renderNews(newsArray) {
             const container = document.getElementById('news-container');
             container.innerHTML = '';
             
@@ -149,15 +150,46 @@
                 newsArray.forEach(item => {
                     const colors = getSourceColorClasses(item.source);
                     
+                    // استخراج الحقول الجديدة (مع وضع قيم افتراضية للأخبار القديمة التي لا تحتوي عليها)
+                    const status = item.status || 'مستجد';
+                    const summary = item.summary || item.description;
+                    const tags = item.tags || ['مدونة الأسرة'];
+                    
+                    // إنشاء شكل الكلمات المفتاحية
+                    let tagsHTML = '';
+                    if (Array.isArray(tags)) {
+                        tags.forEach(tag => {
+                            tagsHTML += `<span class="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] ml-1">#${tag}</span>`;
+                        });
+                    }
+
                     const card = `
-                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300">
-                            <div class="flex justify-between items-start mb-4">
-                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-xs font-bold px-3 py-1 rounded-full">${item.date}</span>
-                                <span class="${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold px-3 py-1 rounded-full shadow-sm">${item.source}</span>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden">
+                            
+                            <!-- شريط حالة الإجراء (مائل في الزاوية) -->
+                            <div class="absolute top-4 left-[-35px] -rotate-45 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-32 text-center text-[10px] font-bold py-1 shadow-sm border-b border-red-200 dark:border-red-700">
+                                ${status}
                             </div>
-                            <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-2">${item.title}</h4>
-                            <p class="text-gray-600 dark:text-gray-300 mb-4 text-sm leading-relaxed">${item.description}</p>
-                            <a href="${item.link}" target="_blank" class="text-red-700 dark:text-red-400 font-bold text-sm hover:underline">المصدر الرسمي 🔗</a>
+
+                            <div class="flex justify-between items-start mb-4 pr-6"> <!-- إضافة pr-6 لتجنب تداخل شريط الحالة -->
+                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">${item.date}</span>
+                                <span class="${colors.bg} ${colors.text} border ${colors.border} text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">${item.source}</span>
+                            </div>
+                            
+                            <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight">${item.title}</h4>
+                            
+                            <!-- الملخص السريع -->
+                            <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 border-red-500 pr-2">${summary}</p>
+                            
+                            <!-- التفاصيل (تكون بلون أبهت قليلاً) -->
+                            <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer" title="انقر لقراءة التفاصيل كاملة">${item.description}</p>
+                            
+                            <div class="flex flex-wrap items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
+                                <div class="flex flex-wrap gap-1">
+                                    ${tagsHTML}
+                                </div>
+                                <a href="${item.link}" target="_blank" class="text-red-700 dark:text-red-400 font-bold text-xs hover:underline mt-2 sm:mt-0">المصدر 🔗</a>
+                            </div>
                         </div>
                     `;
                     container.innerHTML += card;
