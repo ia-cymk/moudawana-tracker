@@ -132,14 +132,11 @@
             
             document.getElementById('stats-banner').classList.remove('hidden');
             
-            // 1. إجمالي المستجدات
             document.getElementById('stat-total').innerText = data.length;
 
-            // 2. عدد القرارات النهائية
             const finalDecisions = data.filter(item => item.status && item.status.includes('قرار نهائي')).length;
             document.getElementById('stat-final').innerText = finalDecisions;
 
-            // 3. الجهة الأكثر نشاطاً (أكثر مصدر تكرر في البيانات)
             const sourceCounts = {};
             let maxCount = 0;
             let topSource = 'غير محدد';
@@ -152,6 +149,29 @@
                     topSource = src;
                 }
             });
+            document.getElementById('stat-top-source').innerText = topSource;
+
+            // --- تحليل زمن الانتظار (فترة الهدوء) ---
+            if (data[0] && data[0].timestamp) {
+                const lastUpdateDate = new Date(data[0].timestamp);
+                const today = new Date();
+                // حساب الفرق بالملي ثانية ثم تحويله إلى أيام
+                const diffTime = Math.abs(today - lastUpdateDate);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                let waitingText = "";
+                if (diffDays === 0) waitingText = "اليوم";
+                else if (diffDays === 1) waitingText = "منذ أمس";
+                else if (diffDays === 2) waitingText = "منذ يومين";
+                else if (diffDays <= 10) waitingText = `${diffDays} أيام`;
+                else waitingText = `${diffDays} يوماً`;
+
+                document.getElementById('stat-waiting-time').innerText = waitingText;
+            } else {
+                // إذا كان الخبر قديماً ولم يحصل على الطابع الزمني بعد
+                document.getElementById('stat-waiting-time').innerText = "غير متوفر";
+            }
+        }
             
             document.getElementById('stat-top-source').innerText = topSource;
         }
