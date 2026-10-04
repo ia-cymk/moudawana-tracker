@@ -85,26 +85,34 @@
         </div>
     </main>
 
-    <script>
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const themeToggleIcon = document.getElementById('theme-toggle-icon');
-        
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            themeToggleIcon.textContent = '☀️️';
-        }
-
-        themeToggleBtn.addEventListener('click', function() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                themeToggleIcon.textContent = '🌙';
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
+    // --- سكربت الوضع الليلي (المُعدّل والمضمون) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleIcon = document.getElementById('theme-toggle-icon');
+            const htmlElement = document.documentElement;
+            
+            // التحقق من حالة الوضع المحفوظة مسبقاً
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlElement.classList.add('dark');
                 themeToggleIcon.textContent = '☀️';
+            } else {
+                htmlElement.classList.remove('dark');
+                themeToggleIcon.textContent = '🌙';
             }
+
+            // تفعيل الزر
+            themeToggleBtn.addEventListener('click', function() {
+                htmlElement.classList.toggle('dark');
+                if (htmlElement.classList.contains('dark')) {
+                    localStorage.theme = 'dark';
+                    themeToggleIcon.textContent = '☀️';
+                } else {
+                    localStorage.theme = 'light';
+                    themeToggleIcon.textContent = '🌙';
+                }
+            });
         });
+        // -------------------------
 
         let allNewsData = [];
 
