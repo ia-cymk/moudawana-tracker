@@ -6,7 +6,6 @@
     <title>راصد مدونة الأسرة | المنصة الرسمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- تفعيل الوضع الليلي في Tailwind -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -18,23 +17,19 @@
         body { font-family: 'Tajawal', sans-serif; }
     </style>
 </head>
-<!-- أضفنا كلاسات الوضع الليلي للجسد (الخلفية والنص) -->
 <body class="bg-slate-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
 
-    <!-- شريط التنقل -->
     <header class="bg-red-800 dark:bg-gray-950 text-white shadow-md border-b-4 border-red-900 dark:border-red-900 transition-colors duration-300">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 <span class="text-3xl">⚖️</span> راصد مدونة الأسرة
             </h1>
-            <!-- زر تبديل الوضع الليلي -->
             <button id="theme-toggle" class="p-2 rounded-lg bg-red-900 dark:bg-gray-800 hover:bg-red-700 dark:hover:bg-gray-700 transition">
                 <span id="theme-toggle-icon" class="text-xl">🌙</span>
             </button>
         </div>
     </header>
 
-    <!-- الواجهة الترحيبية -->
     <section class="bg-white dark:bg-gray-800 py-12 border-b dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto px-4 text-center max-w-3xl">
             <h2 class="text-3xl font-bold text-red-900 dark:text-red-500 mb-4">تتبع مسار تعديل مدونة الأسرة بالمغرب</h2>
@@ -42,13 +37,28 @@
         </div>
     </section>
 
-    <!-- المحتوى -->
-    <main class="container mx-auto px-4 py-12">
+    <main class="container mx-auto px-4 py-8">
         
+        <!-- قسم الإحصائيات السريعة (الجديد) -->
+        <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 hidden">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">إجمالي المستجدات</p>
+                <p id="stat-total" class="text-3xl font-black text-red-800 dark:text-red-500">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">القرارات النهائية</p>
+                <p id="stat-final" class="text-3xl font-black text-green-700 dark:text-green-500">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center col-span-2 md:col-span-2 flex flex-col justify-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">الجهة الأكثر نشاطاً</p>
+                <p id="stat-top-source" class="text-xl font-bold text-gray-800 dark:text-white">-</p>
+            </div>
+        </div>
+
         <!-- قسم البحث والتصفية -->
         <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
             <div class="w-full md:w-2/3 relative">
-                <input type="text" id="searchInput" placeholder="ابحث في المستجدات (مثال: زواج القاصر، التعدد...)" 
+                <input type="text" id="searchInput" placeholder="ابحث في المستجدات..." 
                        class="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-800 dark:focus:border-red-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
                 <span class="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500">🔍</span>
             </div>
@@ -70,14 +80,12 @@
     </main>
 
     <script>
-        // --- سكربت الوضع الليلي ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeToggleIcon = document.getElementById('theme-toggle-icon');
         
-        // التحقق من التفضيل المحفوظ مسبقاً
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
-            themeToggleIcon.textContent = '☀️';
+            themeToggleIcon.textContent = '☀️️';
         }
 
         themeToggleBtn.addEventListener('click', function() {
@@ -91,11 +99,9 @@
                 themeToggleIcon.textContent = '☀️';
             }
         });
-        // -------------------------
 
         let allNewsData = [];
 
-        // تحديث دالة الألوان لتتناسب مع الوضع الليلي
         function getSourceColorClasses(source) {
             if (!source) return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200', border: 'border-gray-200 dark:border-gray-600' };
             
@@ -114,6 +120,36 @@
             }
         }
 
+        // دالة جديدة لحساب الإحصائيات
+        function calculateStats(data) {
+            if(data.length === 0) return;
+            
+            document.getElementById('stats-banner').classList.remove('hidden');
+            
+            // 1. إجمالي المستجدات
+            document.getElementById('stat-total').innerText = data.length;
+
+            // 2. عدد القرارات النهائية
+            const finalDecisions = data.filter(item => item.status && item.status.includes('قرار نهائي')).length;
+            document.getElementById('stat-final').innerText = finalDecisions;
+
+            // 3. الجهة الأكثر نشاطاً (أكثر مصدر تكرر في البيانات)
+            const sourceCounts = {};
+            let maxCount = 0;
+            let topSource = 'غير محدد';
+            
+            data.forEach(item => {
+                const src = item.source || 'غير معروف';
+                sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+                if (sourceCounts[src] > maxCount) {
+                    maxCount = sourceCounts[src];
+                    topSource = src;
+                }
+            });
+            
+            document.getElementById('stat-top-source').innerText = topSource;
+        }
+
         async function loadNews() {
             const container = document.getElementById('news-container');
             const lastUpdate = document.getElementById('last-update');
@@ -122,6 +158,10 @@
             try {
                 const response = await fetch(`data.json?t=${new Date().getTime()}`);
                 allNewsData = await response.json();
+                
+                if (allNewsData.length > 0) {
+                    calculateStats(allNewsData); // استدعاء الإحصائيات
+                }
                 
                 const uniqueSources = [...new Set(allNewsData.map(item => item.source))];
                 uniqueSources.forEach(source => {
@@ -139,23 +179,19 @@
             }
         }
 
-        
-                    function renderNews(newsArray) {
+        function renderNews(newsArray) {
             const container = document.getElementById('news-container');
             container.innerHTML = '';
             
             if (newsArray.length === 0) {
-                 container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium">لم يتم العثور على نتائج مطابقة لبحثك.</p>`;
+                 container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">لم يتم العثور على نتائج.</p>`;
             } else {
                 newsArray.forEach(item => {
                     const colors = getSourceColorClasses(item.source);
-                    
-                    // استخراج الحقول الجديدة (مع وضع قيم افتراضية للأخبار القديمة التي لا تحتوي عليها)
                     const status = item.status || 'مستجد';
                     const summary = item.summary || item.description;
                     const tags = item.tags || ['مدونة الأسرة'];
                     
-                    // إنشاء شكل الكلمات المفتاحية
                     let tagsHTML = '';
                     if (Array.isArray(tags)) {
                         tags.forEach(tag => {
@@ -166,22 +202,19 @@
                     const card = `
                         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden">
                             
-                            <!-- شريط حالة الإجراء (مائل في الزاوية) -->
                             <div class="absolute top-4 left-[-35px] -rotate-45 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-32 text-center text-[10px] font-bold py-1 shadow-sm border-b border-red-200 dark:border-red-700">
                                 ${status}
                             </div>
 
-                            <div class="flex justify-between items-start mb-4 pr-6"> <!-- إضافة pr-6 لتجنب تداخل شريط الحالة -->
+                            <div class="flex justify-between items-start mb-4 pr-6">
                                 <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">${item.date}</span>
                                 <span class="${colors.bg} ${colors.text} border ${colors.border} text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">${item.source}</span>
                             </div>
                             
                             <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight">${item.title}</h4>
                             
-                            <!-- الملخص السريع -->
                             <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 border-red-500 pr-2">${summary}</p>
                             
-                            <!-- التفاصيل (تكون بلون أبهت قليلاً) -->
                             <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer" title="انقر لقراءة التفاصيل كاملة">${item.description}</p>
                             
                             <div class="flex flex-wrap items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
