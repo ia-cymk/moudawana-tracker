@@ -6,7 +6,7 @@
     <title>راصد مدونة الأسرة | المنصة الرسمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- إعدادات الوضع الليلي لـ Tailwind -->
+    <!-- إعدادات الوضع الليلي -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -20,20 +20,17 @@
 </head>
 <body class="bg-slate-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
 
-    <!-- شريط التنقل -->
     <header class="bg-red-800 dark:bg-gray-950 text-white shadow-md border-b-4 border-red-900 dark:border-red-900 transition-colors duration-300">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 <span class="text-3xl">⚖️</span> راصد مدونة الأسرة
             </h1>
-            <!-- زر تبديل الوضع الليلي -->
             <button id="theme-toggle" class="p-2 rounded-lg bg-red-900 dark:bg-gray-800 hover:bg-red-700 dark:hover:bg-gray-700 transition">
                 <span id="theme-toggle-icon" class="text-xl">🌙</span>
             </button>
         </div>
     </header>
 
-    <!-- الواجهة الترحيبية -->
     <section class="bg-white dark:bg-gray-800 py-12 border-b dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto px-4 text-center max-w-3xl">
             <h2 class="text-3xl font-bold text-red-900 dark:text-red-500 mb-4">تتبع مسار تعديل مدونة الأسرة بالمغرب</h2>
@@ -41,10 +38,8 @@
         </div>
     </section>
 
-    <!-- المحتوى الرئيسي -->
     <main class="container mx-auto px-4 py-8">
         
-        <!-- قسم الإحصائيات السريعة -->
         <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 hidden">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">إجمالي المستجدات</p>
@@ -64,7 +59,6 @@
             </div>
         </div>
 
-        <!-- قسم البحث والتصفية -->
         <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
             <div class="w-full md:w-2/3 relative">
                 <input type="text" id="searchInput" placeholder="ابحث في المستجدات (مثال: زواج القاصر، التعدد...)" 
@@ -78,20 +72,25 @@
             </div>
         </div>
 
-        <!-- عنوان قسم الأخبار -->
         <div class="flex justify-between items-end mb-8 border-r-4 border-red-800 dark:border-red-500 pr-3">
             <h3 class="text-2xl font-bold text-gray-800 dark:text-white">المستجدات الموثقة</h3>
             <span id="last-update" class="text-sm text-gray-500 dark:text-gray-400">جاري التحديث...</span>
         </div>
         
-        <!-- حاوية الأخبار -->
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- الأخبار تظهر هنا -->
         </div>
+
+        <!-- زر عرض المزيد (تمت إضافته هنا) -->
+        <div class="text-center mt-10 mb-6">
+            <button id="load-more-btn" class="hidden bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-sm border border-gray-300 dark:border-gray-600 transition-colors duration-300">
+                عرض المزيد من المستجدات ⬇️
+            </button>
+        </div>
+
     </main>
 
     <script>
-        // --- 1. سكربت الوضع الليلي ---
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggleBtn = document.getElementById('theme-toggle');
             const themeToggleIcon = document.getElementById('theme-toggle-icon');
@@ -117,8 +116,11 @@
             });
         });
 
-        // --- 2. المتغيرات والدوال المساعدة ---
+        // --- المتغيرات الجديدة الخاصة بنظام (عرض المزيد) ---
         let allNewsData = [];
+        let currentFilteredNews = []; // مصفوفة تحفظ نتائج البحث الحالية
+        let visibleCount = 9;         // عدد الأخبار التي تظهر في الشاشة
+        const ITEMS_PER_PAGE = 9;     // عدد الأخبار التي ستضاف عند كل نقرة
 
         function getSourceColorClasses(source) {
             if (!source) return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200', border: 'border-gray-200 dark:border-gray-600' };
@@ -138,7 +140,6 @@
             }
         }
 
-        // --- 3. حساب الإحصائيات ---
         function calculateStats(data) {
             if(data.length === 0) return;
             document.getElementById('stats-banner').classList.remove('hidden');
@@ -179,7 +180,6 @@
             }
         }
 
-        // --- 4. جلب البيانات ---
         async function loadNews() {
             const container = document.getElementById('news-container');
             const lastUpdate = document.getElementById('last-update');
@@ -207,7 +207,9 @@
                     });
                 }
 
-                renderNews(allNewsData);
+                currentFilteredNews = allNewsData; // تعيين المصفوفة الحالية
+                renderNews(currentFilteredNews, false); // عرض الدفعة الأولى
+                
                 lastUpdate.innerText = `آخر تحديث: ${new Date().toLocaleString('ar-MA')}`;
             } catch (error) {
                 console.error("خطأ في قراءة JSON:", error);
@@ -215,64 +217,84 @@
             }
         }
 
-        // --- 5. رسم الأخبار (مع الهاشتاجات التفاعلية) ---
-        function renderNews(newsArray) {
+        // --- تعديل دالة الرسم لتدعم (عرض المزيد) ---
+        function renderNews(newsArray, isAppending = false) {
             const container = document.getElementById('news-container');
-            container.innerHTML = '';
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            
+            // إذا كان هذا بحثاً جديداً أو تحميلاً أولياً، نقوم بتفريغ الشاشة وإعادة العداد
+            if (!isAppending) {
+                container.innerHTML = '';
+                visibleCount = ITEMS_PER_PAGE;
+            }
             
             if (newsArray.length === 0) {
                  container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">لا توجد أخبار حالياً أو لا توجد نتائج مطابقة لبحثك.</p>`;
-            } else {
-                newsArray.forEach(item => {
-                    const colors = getSourceColorClasses(item.source);
-                    const status = item.status || 'مستجد';
-                    const summary = item.summary || item.description;
-                    const tags = item.tags || ['مدونة الأسرة'];
-                    
-                    let tagsHTML = '';
-                    if (Array.isArray(tags)) {
-                        tags.forEach(tag => {
-                            // التعديل 1: إضافة خصائص النقر والتمرير والتأثيرات البصرية للهاشتاج
-                            tagsHTML += `<span onclick="filterByTag('${tag}')" class="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] ml-1 cursor-pointer hover:bg-red-100 hover:text-red-800 dark:hover:bg-red-900 dark:hover:text-red-200 transition-colors">#${tag}</span>`;
-                        });
-                    }
+                 loadMoreBtn.classList.add('hidden');
+                 return;
+            }
 
-                    const card = `
-                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden">
-                            <div class="absolute top-4 left-[-35px] -rotate-45 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-32 text-center text-[10px] font-bold py-1 shadow-sm border-b border-red-200 dark:border-red-700">
-                                ${status}
-                            </div>
-                            <div class="flex justify-between items-start mb-4 pr-6">
-                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">${item.date}</span>
-                                <span class="${colors.bg} ${colors.text} border ${colors.border} text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">${item.source}</span>
-                            </div>
-                            <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight">${item.title}</h4>
-                            <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 border-red-500 pr-2">${summary}</p>
-                            <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer" title="انقر لقراءة التفاصيل كاملة">${item.description}</p>
-                            <div class="flex flex-wrap items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
-                                <div class="flex flex-wrap gap-1">
-                                    ${tagsHTML}
-                                </div>
-                                <a href="${item.link}" target="_blank" class="text-red-700 dark:text-red-400 font-bold text-xs hover:underline mt-2 sm:mt-0">المصدر 🔗</a>
-                            </div>
+            // تحديد الأخبار التي سيتم رسمها في هذه الدفعة
+            const startIndex = isAppending ? visibleCount - ITEMS_PER_PAGE : 0;
+            const itemsToRender = newsArray.slice(startIndex, visibleCount);
+
+            itemsToRender.forEach(item => {
+                const colors = getSourceColorClasses(item.source);
+                const status = item.status || 'مستجد';
+                const summary = item.summary || item.description;
+                const tags = item.tags || ['مدونة الأسرة'];
+                
+                let tagsHTML = '';
+                if (Array.isArray(tags)) {
+                    tags.forEach(tag => {
+                        tagsHTML += `<span onclick="filterByTag('${tag}')" class="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded text-[10px] ml-1 cursor-pointer hover:bg-red-100 hover:text-red-800 dark:hover:bg-red-900 dark:hover:text-red-200 transition-colors">#${tag}</span>`;
+                    });
+                }
+
+                const card = `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-colors duration-300 relative overflow-hidden">
+                        <div class="absolute top-4 left-[-35px] -rotate-45 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-32 text-center text-[10px] font-bold py-1 shadow-sm border-b border-red-200 dark:border-red-700">
+                            ${status}
                         </div>
-                    `;
-                    container.innerHTML += card;
-                });
+                        <div class="flex justify-between items-start mb-4 pr-6">
+                            <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">${item.date}</span>
+                            <span class="${colors.bg} ${colors.text} border ${colors.border} text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">${item.source}</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight">${item.title}</h4>
+                        <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 border-red-500 pr-2">${summary}</p>
+                        <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer" title="انقر لقراءة التفاصيل كاملة">${item.description}</p>
+                        <div class="flex flex-wrap items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
+                            <div class="flex flex-wrap gap-1">
+                                ${tagsHTML}
+                            </div>
+                            <a href="${item.link}" target="_blank" class="text-red-700 dark:text-red-400 font-bold text-xs hover:underline mt-2 sm:mt-0">المصدر 🔗</a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+
+            // إخفاء أو إظهار زر عرض المزيد حسب عدد الأخبار المتبقية
+            if (visibleCount < newsArray.length) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
             }
         }
 
-        // --- التعديل 2: دالة جديدة للفلترة عند الضغط على الهاشتاج ---
+        // --- حدث النقر على زر عرض المزيد ---
+        document.getElementById('load-more-btn').addEventListener('click', () => {
+            visibleCount += ITEMS_PER_PAGE;
+            renderNews(currentFilteredNews, true); // true تعني إضافة الأخبار للقديمة بدلاً من مسحها
+        });
+
         function filterByTag(tag) {
             const searchInput = document.getElementById('searchInput');
-            searchInput.value = tag; // وضع الكلمة في مربع البحث
-            filterData(); // تشغيل الفلترة
-            
-            // تمرير الشاشة بلطف إلى مربع البحث لكي يرى المستخدم النتائج
+            searchInput.value = tag;
+            filterData();
             searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // --- 6. البحث والتصفية المتطورة ---
         document.getElementById('searchInput').addEventListener('input', filterData);
         document.getElementById('sourceFilter').addEventListener('change', filterData);
 
@@ -280,18 +302,17 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const selectedSource = document.getElementById('sourceFilter').value;
 
-            const filteredNews = allNewsData.filter(item => {
-                // التعديل 3: جعل محرك البحث يبحث داخل الكلمات المفتاحية أيضاً
+            currentFilteredNews = allNewsData.filter(item => {
                 const hasTag = item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-                
                 const matchesSearch = item.title.toLowerCase().includes(searchTerm) || 
                                       item.description.toLowerCase().includes(searchTerm) ||
                                       hasTag;
-                                      
                 const matchesSource = selectedSource === 'all' || item.source === selectedSource;
                 return matchesSearch && matchesSource;
             });
-            renderNews(filteredNews);
+            
+            // عند البحث، نقوم بعرض الدفعة الأولى من النتائج الجديدة
+            renderNews(currentFilteredNews, false);
         }
 
         document.addEventListener('DOMContentLoaded', loadNews);
