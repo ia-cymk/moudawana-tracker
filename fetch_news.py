@@ -54,7 +54,6 @@ def update_news():
             existing_links = [item.get('link', '') for item in existing_data]
             existing_titles = [item.get('title', '') for item in existing_data]
             
-            # جلب التاريخ الحالي للبرنامج
             current_iso_time = datetime.now().isoformat()
             
             for item in new_data:
@@ -63,18 +62,32 @@ def update_news():
                         item['summary'] = item.get('summary', item.get('description', 'لا يوجد ملخص متاح.'))
                         item['tags'] = item.get('tags', ['مدونة الأسرة'])
                         item['status'] = item.get('status', 'مستجد')
-                        
-                        # --- إضافة الطابع الزمني الدقيق للتحليل ---
                         item['timestamp'] = current_iso_time
                         
                         existing_data.insert(0, item)
                         added_count += 1
             
-            with open("data.json", 'w', encoding='utf-8') as f:
-                json.dump(existing_data, f, ensure_ascii=False, indent=4)
+            # --- نظام الحفظ والنسخ الاحتياطي ---
+            if added_count > 0:
+                # 1. تحديث الملف الرئيسي للموقع
+                with open("data.json", 'w', encoding='utf-8') as f:
+                    json.dump(existing_data, f, ensure_ascii=False, indent=4)
                 
-            print(f"تم تحليل وتحديث الأرشيف بنجاح. تمت إضافة {added_count} خبر جديد.")
-            
+                # 2. إنشاء مجلد النسخ الاحتياطي إذا لم يكن موجوداً
+                if not os.path.exists("backups"):
+                    os.makedirs("backups")
+                    
+                # 3. حفظ نسخة احتياطية بتاريخ اليوم
+                backup_date = datetime.now().strftime("%Y-%m-%d")
+                backup_filename = f"backups/data_backup_{backup_date}.json"
+                
+                with open(backup_filename, 'w', encoding='utf-8') as bf:
+                    json.dump(existing_data, bf, ensure_ascii=False, indent=4)
+                    
+                print(f"نجاح: تمت إضافة {added_count} خبر، وتم أخذ نسخة احتياطية في {backup_filename}")
+            else:
+                print("لم يتم العثور على أخبار جديدة. الأرشيف بأمان ولم يتغير.")
+                
         except json.JSONDecodeError:
             print("الرد المستلم ليس بصيغة JSON صالحة.")
             
