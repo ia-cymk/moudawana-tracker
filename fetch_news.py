@@ -1,6 +1,8 @@
 import os
 import json
 from datetime import datetime
+import email.utils
+from xml.sax.saxutils import escape
 from google import genai
 from google.genai import types
 
@@ -67,24 +69,20 @@ def update_news():
                         existing_data.insert(0, item)
                         added_count += 1
             
-            # --- نظام الحفظ والنسخ الاحتياطي ---
             if added_count > 0:
-                # 1. تحديث الملف الرئيسي للموقع
+                # حفظ JSON
                 with open("data.json", 'w', encoding='utf-8') as f:
                     json.dump(existing_data, f, ensure_ascii=False, indent=4)
                 
-                # 2. إنشاء مجلد النسخ الاحتياطي إذا لم يكن موجوداً
+                # حفظ النسخة الاحتياطية
                 if not os.path.exists("backups"):
                     os.makedirs("backups")
-                    
-                # 3. حفظ نسخة احتياطية بتاريخ اليوم
                 backup_date = datetime.now().strftime("%Y-%m-%d")
                 backup_filename = f"backups/data_backup_{backup_date}.json"
-                
                 with open(backup_filename, 'w', encoding='utf-8') as bf:
                     json.dump(existing_data, bf, ensure_ascii=False, indent=4)
                     
-                print(f"نجاح: تمت إضافة {added_count} خبر، وتم أخذ نسخة احتياطية في {backup_filename}")
+                print(f"نجاح: تمت إضافة {added_count} خبر، وتم أخذ نسخة احتياطية.")
             else:
                 print("لم يتم العثور على أخبار جديدة. الأرشيف بأمان ولم يتغير.")
                 
@@ -93,6 +91,56 @@ def update_news():
             
     except Exception as e:
         print(f"حدث خطأ أثناء التواصل مع API: {e}")
+
+    # --- نظام توليد خلاصة الأخبار (RSS Feed) ---
+    if existing_data:
+        try:
+            print("جاري تحديث ملف خلاصة الأخبار (RSS)...")
+            rss_items = ""
+            # سنكتفي بآخر 50 خبراً في ملف الـ RSS ليكون خفيفاً وسريعاً
+            for item in existing_data[:50]:
+                title = escape(item.get('title', 'بدون عنوان'))
+                link = escape(item.get('link', 'https://ia-cymk.github.io/moudawana-tracker/'))
+                desc = escape(item.get('summary', item.get('description', '')))
+                
+                # تحويل التاريخ لصيغة RSS العالمية (RFC 822)
+                pub_date_xml = ""
+                if 'timestamp' in item:
+                    try:
+                        dt = datetime.fromisoformat(item['timestamp'])
+                        pub_date_xml = f"<pubDate>{email.utils.format_datetime(dt)}</pubDate>"
+                    except:
+                        pass
+                
+                # إضافة الهاشتاجات كأقسام (Categories)
+                categories = "".join([f"<category>{escape(tag)}</category>" for tag in item.get('tags', [])])
+
+                rss_items += f"""
+                <item>
+                    <title>{title}</title>
+                    <link>{link}</link>
+                    <description>{desc}</description>
+                    {pub_date_xml}
+                    {categories}
+                </item>"""
+
+            # الهيكل الأساسي لملف XML
+            rss_feed = f"""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+    <title>راصد مدونة الأسرة | المنصة الرسمية</title>
+    <link>https://ia-cymk.github.io/moudawana-tracker/</link>
+    <description>تتبع مسار تعديل مدونة الأسرة بالمغرب من المصادر الموثوقة.</description>
+    <language>ar</language>
+    {rss_items}
+</channel>
+</rss>"""
+            
+            with open("rss.xml", 'w', encoding='utf-8') as f:
+                f.write(rss_feed)
+            print("تم إنشاء/تحديث ملف rss.xml بنجاح.")
+        except Exception as e:
+            print(f"حدث خطأ أثناء إنشاء ملف RSS: {e}")
 
 if __name__ == "__main__":
     update_news()
