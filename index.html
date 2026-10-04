@@ -40,6 +40,7 @@
     <main class="container mx-auto px-4 py-8">
         
         <!-- قسم الإحصائيات السريعة (الجديد) -->
+        <!-- قسم الإحصائيات السريعة -->
         <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 hidden">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">إجمالي المستجدات</p>
@@ -49,9 +50,14 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">القرارات النهائية</p>
                 <p id="stat-final" class="text-3xl font-black text-green-700 dark:text-green-500">0</p>
             </div>
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center col-span-2 md:col-span-2 flex flex-col justify-center">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center flex flex-col justify-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold">الجهة الأكثر نشاطاً</p>
                 <p id="stat-top-source" class="text-xl font-bold text-gray-800 dark:text-white">-</p>
+            </div>
+            <!-- المربع الجديد لزمن الانتظار -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 text-center flex flex-col justify-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold" title="عدد الأيام منذ صدور آخر مستجد رسمي">فترة الهدوء الحالية</p>
+                <p id="stat-waiting-time" class="text-xl font-bold text-orange-600 dark:text-orange-400">-</p>
             </div>
         </div>
 
