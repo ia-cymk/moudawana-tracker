@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>راصد مدونة الأسرة | المنصة الرسمية</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- تضمين مكتبة الرسوم البيانية Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
@@ -24,6 +23,9 @@
         }
         .dark .timeline-item::before { background: #1f2937; border-color: #ef4444; }
         .is-rumor-timeline::before { border-color: #f97316 !important; }
+        /* تنسيق الكلمات المبرزة */
+        mark.highlight { background-color: #fde047; color: #111827; padding: 0 4px; border-radius: 4px; }
+        .dark mark.highlight { background-color: #ca8a04; color: #ffffff; }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
@@ -76,7 +78,6 @@
             </div>
         </div>
 
-        <!-- قسم الرسوم البيانية التفاعلية الجديد -->
         <div id="charts-section" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 hidden">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
                 <h4 class="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">الموثوقية: رسمي مقابل إشاعة</h4>
@@ -94,7 +95,7 @@
 
         <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
             <div class="w-full md:w-2/3 relative">
-                <input type="text" id="searchInput" placeholder="ابحث في المستجدات أو الشائعات..." 
+                <input type="text" id="searchInput" placeholder="ابحث في المستجدات أو الشائعات (مثال: الحضانة، النفقة...)" 
                        class="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-red-800 dark:focus:border-red-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition">
                 <span class="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500">🔍</span>
             </div>
@@ -145,8 +146,6 @@
                     localStorage.theme = 'light';
                     themeToggleIcon.textContent = '🌙';
                 }
-                
-                // تحديث ألوان الرسوم البيانية عند تغيير الوضع الليلي
                 if (window.myReliabilityChart) window.myReliabilityChart.update();
                 if (window.mySourcesChart) window.mySourcesChart.update();
             });
@@ -158,15 +157,20 @@
         const ITEMS_PER_PAGE = 9;
         let activeTab = 'رسمي'; 
         let viewMode = 'grid'; 
-
         const SITE_URL = "https://ia-cymk.github.io/moudawana-tracker/";
 
-        // متغيرات للرسوم البيانية
         let reliabilityChartInstance = null;
         let sourcesChartInstance = null;
-        
-        // إعدادات الخطوط الافتراضية للرسوم البيانية
         Chart.defaults.font.family = "'Tajawal', sans-serif";
+
+        // دالة جديدة لتلوين وإبراز كلمات البحث
+        function highlightText(text, keyword) {
+            if (!keyword || !text) return text;
+            // تجاوز الرموز الخاصة في محرك البحث لتفادي أخطاء برمجية
+            const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+            return text.replace(regex, `<mark class="highlight">$1</mark>`);
+        }
 
         function drawCharts(data) {
             if(data.length === 0) return;
@@ -175,7 +179,6 @@
             const officials = data.filter(item => (item.type || 'رسمي') === 'رسمي').length;
             const rumors = data.filter(item => item.type === 'إشاعة').length;
 
-            // استخراج إحصائيات الجهات الرسمية فقط
             const sourcesData = {};
             data.forEach(item => {
                 if ((item.type || 'رسمي') === 'رسمي') {
@@ -184,10 +187,8 @@
                 }
             });
 
-            // 1. رسم دائري (رسمي مقابل إشاعة)
             const ctxReliability = document.getElementById('reliabilityChart').getContext('2d');
             if(reliabilityChartInstance) reliabilityChartInstance.destroy();
-            
             window.myReliabilityChart = reliabilityChartInstance = new Chart(ctxReliability, {
                 type: 'doughnut',
                 data: {
@@ -199,26 +200,18 @@
                         hoverOffset: 4
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { color: () => document.documentElement.classList.contains('dark') ? '#d1d5db' : '#374151' } } }
-                }
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: () => document.documentElement.classList.contains('dark') ? '#d1d5db' : '#374151' } } } }
             });
 
-            // 2. رسم الأعمدة (نشاط المصادر)
             const ctxSources = document.getElementById('sourcesChart').getContext('2d');
             if(sourcesChartInstance) sourcesChartInstance.destroy();
-            
-            const sourceLabels = Object.keys(sourcesData);
-            const sourceValues = Object.values(sourcesData);
-
             window.mySourcesChart = sourcesChartInstance = new Chart(ctxSources, {
                 type: 'bar',
                 data: {
-                    labels: sourceLabels,
+                    labels: Object.keys(sourcesData),
                     datasets: [{
                         label: 'عدد المستجدات',
-                        data: sourceValues,
+                        data: Object.values(sourcesData),
                         backgroundColor: '#dc2626',
                         borderRadius: 4,
                     }]
@@ -227,15 +220,8 @@
                     responsive: true,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { precision: 0, color: () => document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563' },
-                            grid: { color: () => document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' }
-                        },
-                        x: { 
-                            ticks: { color: () => document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563' },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { precision: 0, color: () => document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563' }, grid: { color: () => document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb' } },
+                        x: { ticks: { color: () => document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563' }, grid: { display: false } }
                     }
                 }
             });
@@ -257,7 +243,8 @@
                 btnGrid.className = "p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-bold text-sm shadow-sm transition hover:bg-red-50 dark:hover:bg-gray-600";
                 container.className = "flex flex-col gap-6 relative timeline-container pr-12";
             }
-            renderNews(currentFilteredNews, false);
+            const currentSearchTerm = document.getElementById('searchInput').value.trim();
+            renderNews(currentFilteredNews, false, currentSearchTerm);
         }
 
         function switchTab(tabType) {
@@ -334,7 +321,7 @@
                 
                 if (allNewsData.length > 0) {
                     calculateStats(allNewsData);
-                    drawCharts(allNewsData); // استدعاء دالة الرسم البياني
+                    drawCharts(allNewsData);
                     updateSourceDropdown();
                 }
                 filterData();
@@ -358,7 +345,8 @@
             });
         }
 
-        function renderNews(newsArray, isAppending = false) {
+        // دالة الرسم أصبحت تستقبل الكلمة المبحوث عنها لتلوينها
+        function renderNews(newsArray, isAppending = false, searchTerm = '') {
             const container = document.getElementById('news-container');
             const loadMoreBtn = document.getElementById('load-more-btn');
             
@@ -368,7 +356,7 @@
             }
             
             if (newsArray.length === 0) {
-                 const msg = activeTab === 'رسمي' ? 'لا توجد مستجدات رسمية حالياً.' : 'الحمد لله، لا توجد شائعات مرصودة حالياً.';
+                 const msg = activeTab === 'رسمي' ? 'لا توجد مستجدات رسمية حالياً أو لا توجد نتائج مطابقة لبحثك.' : 'لا توجد شائعات مطابقة أو مرصودة.';
                  container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-3 font-medium text-center py-8">${msg}</p>`;
                  loadMoreBtn.classList.add('hidden');
                  return;
@@ -381,7 +369,12 @@
                 const isRumor = item.type === 'إشاعة';
                 const colors = getSourceColorClasses(item.source, item.type);
                 const status = item.status || 'مستجد';
-                const summary = item.summary || item.description;
+                
+                // تطبيق دالة التلوين (Highlight) على النصوص
+                const title = highlightText(item.title, searchTerm);
+                const summary = highlightText(item.summary || item.description, searchTerm);
+                const description = highlightText(item.description, searchTerm);
+                
                 const tags = item.tags || ['مدونة الأسرة'];
                 
                 const cardStyle = isRumor ? "bg-orange-50 dark:bg-gray-800 border-orange-200 dark:border-orange-900" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700";
@@ -412,9 +405,9 @@
                             <span class="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 text-[10px] font-bold px-2 py-1 rounded-full">${item.date}</span>
                             <span class="${colors.bg} ${colors.text} border ${colors.border} text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">${item.source}</span>
                         </div>
-                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight z-10">${item.title}</h4>
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 leading-tight z-10">${title}</h4>
                         <p class="text-gray-800 dark:text-gray-200 mb-3 text-sm font-medium border-r-2 ${isRumor ? 'border-orange-500' : 'border-red-500'} pr-2 z-10">${summary}</p>
-                        <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer z-10">${item.description}</p>
+                        <p class="text-gray-500 dark:text-gray-400 mb-4 text-xs leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300 cursor-pointer z-10">${description}</p>
                         
                         <div class="flex-grow"></div>
                         
@@ -444,7 +437,8 @@
 
         document.getElementById('load-more-btn').addEventListener('click', () => {
             visibleCount += ITEMS_PER_PAGE;
-            renderNews(currentFilteredNews, true); 
+            const currentSearchTerm = document.getElementById('searchInput').value.trim();
+            renderNews(currentFilteredNews, true, currentSearchTerm); 
         });
 
         function filterByTag(tag) {
@@ -458,22 +452,24 @@
         document.getElementById('sourceFilter').addEventListener('change', filterData);
 
         function filterData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const lowerSearchTerm = searchTerm.toLowerCase();
             const selectedSource = document.getElementById('sourceFilter').value;
 
             currentFilteredNews = allNewsData.filter(item => {
                 if (item.type !== activeTab) return false;
                 
-                const hasTag = item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-                const matchesSearch = item.title.toLowerCase().includes(searchTerm) || 
-                                      item.description.toLowerCase().includes(searchTerm) ||
+                const hasTag = item.tags && item.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm));
+                const matchesSearch = item.title.toLowerCase().includes(lowerSearchTerm) || 
+                                      item.description.toLowerCase().includes(lowerSearchTerm) ||
                                       hasTag;
                 const matchesSource = selectedSource === 'all' || item.source === selectedSource;
                 return matchesSearch && matchesSource;
             });
             
             updateSourceDropdown();
-            renderNews(currentFilteredNews, false);
+            // تمرير الكلمة المبحوث عنها لكي يتم تلوينها
+            renderNews(currentFilteredNews, false, searchTerm);
         }
 
         document.addEventListener('DOMContentLoaded', loadNews);
